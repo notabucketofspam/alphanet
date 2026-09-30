@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <vector>
 #include <thread>
 #include <chrono>
-#include <vector>
 #include "AlphaSign.h"
 
 // Helper to convert strings to lowercase for easier argument parsing
@@ -12,48 +12,47 @@ std::string toLower(std::string s) {
   return s;
 }
 
-void printUsage(const char* programName) {
-  std::cout << "AlphaSign Command Line Interface\n"
-    << "Usage: " << programName << " <port> \"<message>\" [color] [mode]\n\n"
-    << "Arguments:\n"
-    << "  port      Windows: COM3  |  Linux: /dev/ttyUSB0\n"
-    << "  message   The text to display (wrap in quotes)\n"
-    << "  color     red, green, amber, dimred, dimgreen, brown, orange,\n"
-    << "            yellow, rainbow1, rainbow2, mix, auto (default: auto)\n"
-    << "  mode      hold, rotate, flash, scroll, rollup, rolldown, wipeup,\n"
-    << "            wipedown, wipeleft, wiperight (default: hold)\n\n"
-    << "Examples:\n"
-#ifdef _WIN32
-    << "  " << programName << " COM3 \"SYSTEM ONLINE\" green rotate\n";
-#else
-    << "  " << programName << " /dev/ttyUSB0 \"SYSTEM ONLINE\" green rotate\n";
-#endif
-}
-
+// Replaces literal escape sequences and normalizes OS newlines
 void parseEscapeSequences(std::string& str) {
-  // 1. Handle literal "\n" or "\r" typed in Windows CMD / basic quotes
   size_t pos = 0;
   while ((pos = str.find("\\n", pos)) != std::string::npos) {
     str.replace(pos, 2, "\x0D");
     pos += 1;
   }
-
   pos = 0;
   while ((pos = str.find("\\r", pos)) != std::string::npos) {
     str.replace(pos, 2, "\x0D");
     pos += 1;
   }
-
-  // 2. Handle literal "\p" for New Page (0x0C)
   pos = 0;
   while ((pos = str.find("\\p", pos)) != std::string::npos) {
     str.replace(pos, 2, "\x0C");
     pos += 1;
   }
-
-  // 3. Handle actual Line Feed bytes (0x0A) from Bash $'...' interpolation
-  // Normalizes them to the hardware's expected 0x0D.
   std::replace(str.begin(), str.end(), '\n', '\x0D');
+}
+
+void printUsage(const char* programName) {
+  std::cout << "AlphaSign Command Line Interface\n"
+    << "Usage: " << programName << " [options] <port> \"<message>\"\n\n"
+    << "Arguments:\n"
+    << "  port              Windows: COM3  |  Linux: /dev/ttyUSB0\n"
+    << "  message           The text to display (wrap in quotes).\n"
+    << "                    Use \\n for a New Line, and \\p for a New Page.\n\n"
+    << "Options:\n"
+    << "  -p, --priority    Bypass memory saving for instant, temporary display.\n"
+    << "  -c, --color <val> red, green, amber, dimred, dimgreen, brown, orange,\n"
+    << "                    yellow, rainbow1, rainbow2, mix, auto (default: auto)\n"
+    << "  -m, --mode <val>  hold, rotate, flash, scroll, rollup, rolldown, wipeup,\n"
+    << "                    wipedown, wipeleft, wiperight (default: hold)\n\n"
+    << "Examples:\n"
+#ifdef _WIN32
+    << "  " << programName << " COM3 \"STORE HOURS\" -c amber\n"
+    << "  " << programName << " -p COM3 \"SYSTEM FAULT\" -c red -m flash\n";
+#else
+    << "  " << programName << " /dev/ttyUSB0 \"STORE HOURS\" -c amber\n"
+    << "  " << programName << " -p /dev/ttyUSB0 \"SYSTEM FAULT\" -c red -m flash\n";
+#endif
 }
 
 AlphaSign::SignColor parseColor(const std::string& colorStr) {
@@ -83,66 +82,75 @@ AlphaSign::DisplayMode parseMode(const std::string& modeStr) {
   if (m == "wipedown")  return AlphaSign::DisplayMode::WipeDown;
   if (m == "wipeleft")  return AlphaSign::DisplayMode::WipeLeft;
   if (m == "wiperight") return AlphaSign::DisplayMode::WipeRight;
-  return AlphaSign::DisplayMode::Hold; // Default
+  return AlphaSign::DisplayMode::Hold;
 }
 
 int main(int argc, char* argv[]) {
-  if (argc < 3) {
+  bool usePriority = false;
+  std::string colorArg = "";
+  std::string modeArg = "";
+  std::vector<std::string> args;
+
+  // Parse flags and collect positional arguments
+  for (int i = 1; i < argc; ++i) {
+    std::string arg = argv[i];
+    if (arg == "-p" || arg == "--priority") {
+      usePriority = true;
+    } else if ((arg == "-c" || arg == "--color") && i + 1 < argc) {
+      colorArg = argv[++i]; // Grab the next argument as the value
+    } else if ((arg == "-m" || arg == "--mode") && i + 1 < argc) {
+      modeArg = argv[++i];  // Grab the next argument as the value
+    } else {
+      // Unrecognized flags are treated as positional arguments (port and message)
+      args.push_back(arg);
+    }
+  }
+
+  // We still require exactly 2 positional arguments: port and message
+  if (args.size() < 2) {
     printUsage(argv[0]);
     return 1;
   }
 
-  std::string portName = argv[1];
-  std::string message = argv[2];
+  std::string portName = args[0];
+  std::string message = args[1];
 
   parseEscapeSequences(message);
 
 #ifdef _WIN32
-  // Windows API requires \\.\COMx for ports, especially COM10 and above.
-  // If the user just typed "COM3", silently fix it for them.
   std::string lowerPort = toLower(portName);
   if (lowerPort.length() >= 4 && lowerPort.substr(0, 3) == "com" && lowerPort.find("\\\\.\\") == std::string::npos) {
     portName = "\\\\.\\" + portName;
   }
 #endif
 
-  // Setup configuration with defaults
   AlphaSign::SignConfig config;
-  config.typeCode = 'Z';   // Broadcast to all signs connected to the bus
-  config.isPriority = false;
+  config.typeCode = 'Z';
+  config.isPriority = usePriority;
   config.position = AlphaSign::DisplayPosition::Fill;
 
-  // Parse optional Color argument
-  if (argc >= 4) {
-    config.color = parseColor(argv[3]);
-  }
+  if (!colorArg.empty()) config.color = parseColor(colorArg);
+  if (!modeArg.empty()) config.mode = parseMode(modeArg);
 
-  // Parse optional Mode argument
-  if (argc >= 5) {
-    config.mode = parseMode(argv[4]);
-  }
-
-  std::cout << "Connecting to " << argv[1] << "...\n"; // Print what the user typed
-  AlphaSign::SerialPort port(portName);                // Use the safely formatted string
+  std::cout << "Connecting to " << args[0] << "...\n";
+  AlphaSign::SerialPort port(portName);
 
   if (!port.isValid()) {
     std::cerr << "Error: Could not open serial port.\n";
     return 1;
   }
 
-  if (!config.isPriority) {
+  if (!usePriority) {
     std::cout << "Allocating memory...\n";
     std::vector<AlphaSign::FileConfig> memoryLayout = {
-      // label, type, isLocked, size, dotsH, dotsW, dotsColor, startTime, stopTime
-      { 'A', AlphaSign::FileType::Text, false, 256, 0, 0, "2000", "FF", "00" }
+        { 'A', AlphaSign::FileType::Text, false, 256 }
     };
     auto configPacket = AlphaSign::createConfigPacket(memoryLayout, config.typeCode);
     port.write(configPacket);
-
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
 
-  std::cout << "Sending message: \"" << message << "\"\n";
+  std::cout << (usePriority ? "Sending priority alert: \"" : "Saving message: \"") << message << "\"\n";
   auto packet = AlphaSign::createTextMessagePacket(message, config);
 
   if (port.write(packet)) {
