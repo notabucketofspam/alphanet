@@ -361,3 +361,19 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# ==============================================
+
+/.vs
+
+# build outputs for when im throwing
+*.exe
+
+obj/
+x64/
+bin/
+Debug/
+
+out/
+port.txt
+session-state/

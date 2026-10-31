@@ -1,0 +1,30 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "avr-base",
+      "displayName": "AVR Workspace",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "toolchainFile": "${sourceDir}/cmake/avr.toolchain.cmake",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "ARDUINO_CORE_DIR": "C:/opt/atmel/ArduinoCore-avr"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "linux-gcc-arm"
+        }
+      }
+    }
+  ],
+  "buildPresets": [
+
+    {
+      "name": "flash-active",
+      "configurePreset": "avr-base",
+      "displayName": "Flash Active Project",
+      "targets": [ "upload_lab6" ]
+    }
+  ]
+}
