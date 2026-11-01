@@ -1,0 +1,14 @@
+sticker:
+(c)AMS 10226402 rev A
+CS = 661D
+2012
+
+back:
+2U2115-5-34016G
+1-P1227 e3
+
+the chip:
+ATMEL
+AT27C010
+70PU
+1227

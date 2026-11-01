@@ -1,0 +1,15 @@
+there's six pins on the ribbon cable. the entire sign is made up of boards. a board controls two rows of eight characters. each character is 5x7 leds. there's twelve boards total for the whole sign.
+
+the six-pin ribbon cable input connects on the top left of the board. on the bottom right is another six-pin connector for the adjacent board's ribbon cable.
+
+the chips i've found:
+- 1x SN74HC14N hex inverter with Schmitt-Trigger inputs
+- 1x SN74HC86N quad XOR
+- 1x SN74HC04N hex inverter
+
+- 2x SN74HC164N shift register
+- 2x MC1413P seven NPN Darlington transistors
+
+- 10x TPIC6B595N power logic 8-bit shift register
+
+there are five 595 chips on the top row and five 595 chips on the bottom row. the 74hc14 is located right next to the input 6-pin connector, the 74hc86 is adjacent to the 74hc14. the two 74hc164 and mc1413p chips sit in-between the bottom row of characters and the top row of characters. the 74hc04 inverter sits right before the output 6-pin connector.

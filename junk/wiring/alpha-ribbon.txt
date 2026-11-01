@@ -1,0 +1,7 @@
+ribbon pinout (apparent):
+1 : RED CLK
+2 : CLEAR
+3 : GREEN DATA
+4 : LATCH
+5 : RED DATA
+6 : GREEN CLOCK

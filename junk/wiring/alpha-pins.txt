@@ -1,0 +1,59 @@
+top 595 pins:
+/G   : 86-4Y
+SRCK : 86-1Y
+RCK  : 86-2Y
+SERIN: 14-3Y
+/SRCLR:VLOGIC
+
+bottom 595 pins:
+/G   : 86-4Y
+SRCK : 86-3Y
+RCK  : 86-2Y
+SERIN: 14-2Y
+/SRCLR:VLOGIC
+
+left 164 pins:
+A,B  : 14-6Y
+CLK  : 86-2Y
+/CLR : VLOGIC-1K
+
+right 164 pins:
+A,B  : left 164-QH
+CLK  : 86-2Y
+/CLR : VLOGIC-1K
+
+14 pins:
+1A : ribbon pin 1
+1Y : 86-1A
+2A : ribbon pin 3
+2Y : bottom 595-SERIN
+3A : ribbon pin 5
+3Y : top 595-SERIN
+4A : ribbon pin 6
+4Y : 86-3A
+5A : ribbon pin 4
+5Y : 86-2A
+6A : ribbon pin 2
+6Y : 86-4A, left 164-A,B
+
+86 pins:
+1A : 14-1Y
+1B : GND
+1Y : top 595-SRCK
+2A : 14-5Y
+2B : GND
+2Y : 595-RCK, 164-CLK
+3A : 14-4Y
+3B : GND
+3Y : bottom 595-SRCK
+4A : 14-6Y, left 164-A,B
+4B : VLOGIC
+4Y : 595-/G
+
+ribbon pinout (apparent):
+1 : top 595-SRCK
+2 : 86-4A, left 164-A,B
+3 : bottom 595-SERIN
+4 : 595-RCK, 164-CLK
+5 : top 595-SERIN
+6 : bottom 595-SRCK
