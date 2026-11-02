@@ -1,0 +1,18 @@
+MCU:
+P80C32SBPN
+Intel 8051-like
+NXP
+
+SRAM:
+CY62256NLL-70PXC
+32K x 8
+Cypress
+
+EPROM:
+AT27C010
+128K x 8
+Atmel
+
+stuff:
+14.7456 MHz crystal oscillator 
+
