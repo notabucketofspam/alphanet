@@ -1,0 +1,10 @@
+Measurements were taken at control board's ribbon cable connector. The LEDs were set to orange, hence red_clk matches green_clk and red_dat matches green_dat.
+
+pin 1 : 0.470V
+pin 2 : 0.084V
+pin 3 : 4.62V
+pin 4 : 4.93V
+pin 5 : 4.62V
+pin 6 : 0.470V
+
+VLOGIC: 4.99V
