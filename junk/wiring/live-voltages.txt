@@ -1,0 +1,10 @@
+VLOGIC: 5V exactly (I adjusted the power supply a smidge so that it's outputting exactly 5V, instead of 5.18V which is what it was originally).
+595 /G: 0V
+74HC168 /CLR: 0.29V (probably the culprit)
+74HC14 pin 2: ~2.9V, fluctuates slightly
+74HC14 pin 4: 5V
+74HC14 pin 8: stuck at 2.01V
+
+I should note that there's a 7A104J resistor attached in parallel to all of the 74HC14's inputs, which acts as a pull-up to VLOGIC.
+
+The original control board has no way of interacting with the power supply to switch current on or off. it has a connection to VLOGIC and GND, and it has the 6-pin header for the ribbon cable, and that's it.
