@@ -1,0 +1,75 @@
+Pins on components that only have two pins are labelled using cardinal directions.
+
+All of the ICs on this board have a 50nF capacitor attached right next to their VCC pin, which makes sense. But there's one extra 50nF cap that's sort of out in the middle of nowhere (label : C5). It's actually sort of close to the rightmost 74HC164 IC.
+
+There's a nearby 2N4401 NPN transistor (label : Q16).
+Also, a 2N4403 PNP transistor (label : Q15).
+
+Some nearby resistors:
+R123 (10k ohm)
+R124 (10k ohm)
+R125 (22k ohm)
+R126 (10k ohm)
+R127 (5k ohm)
+
+Every measured value in the table is basically constant and instantaneous, i.e. it doesn't slowly rise. A slow rise in resistance would indicate that current is flowing through one of the large 1mF capacitors at the top of the board.
+
+The 164 referenced in the table is the rightmost 74HC164. The leftmost 164-QH connects to the rightmost 164-A,B.
+
+-------------------------------
+
+Table of measurements:
+
+---
+
+164-QG -> 164-/CLR: 32.5k ohm
+164-QG -> GND     : 10.8k ohm
+164-/CLR -> GND   : 21.6k ohm
+164-/CLR -> R125-W:     0 ohm
+164-CLK -> R127-N :     0 ohm
+164-QG -> VCC     : slow rise
+164-/CLR -> VCC   : slow rise
+
+---
+
+C5-W -> C5-E      : 19.5k ohm
+C5-W -> VCC       :  9.8k ohm
+C5-W -> GND       : slow rise
+C5-W -> Q16-coll  :     0 ohm
+C5-W -> R126-S    :     0 ohm
+
+C5-E -> VCC       :  9.8k ohm
+C5-E -> GND       : slow rise
+C5-E -> R126-N    :   10k ohm
+C5-E -> R126-S    :   20k ohm
+C5-E -> R123-W    :     0 ohm
+C5-E -> R124-W    :     0 ohm
+
+---
+
+Q16-coll -> C5-W  :     0 ohm
+Q16-coll -> R126-S:     0 ohm
+Q16-emit -> GND   :     0 ohm
+Q16-base -> R127-S:     0 ohm
+
+Q15-emit -> VCC   :     0 ohm
+Q15-base -> R124-E:     0 ohm
+Q15-coll -> GND   : 21.6k ohm
+Q15-coll -> 164-/CLR:   0 ohm
+
+---
+
+R123-E -> VCC     :     0 ohm
+R123-W -> C5-E    :     0 ohm
+
+R124-E -> Q15-base:     0 ohm
+R124-W -> C5-E    :     0 ohm
+
+R125-E -> GND     :     0 ohm
+R125-W -> 164-/CLR:     0 ohm
+
+R126-N -> VCC     :     0 ohm
+R126-S -> Q16-coll:     0 ohm
+
+R127-N -> 86-2Y   :     0 ohm
+R127-S -> Q16-base:     0 ohm
