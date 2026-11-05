@@ -13,9 +13,11 @@
 #define MASK_BOTH_CLKS (MASK_RED_CLK | MASK_GRN_CLK) // 0x84
 #define MASK_BOTH_DATS (MASK_RED_DAT | MASK_GRN_DAT) // 0x50
 
-// Idle PORTD state during the 1,179 us display hold window:
-// LATCH = HIGH, RED_DAT = HIGH, GRN_DAT = HIGH | Clocks = LOW, ROW_RESET = LOW
+// Idle PORTD state during the display hold window:
 #define PORTD_IDLE (MASK_LATCH | MASK_BOTH_DATS)
+
+// Row hold time in microseconds (500 us + 300 us shift = ~815 us/row -> ~88 Hz frame rate)
+#define ROW_HOLD_US 500.0
 
 // 1 Pixel Shift: 5 cycles (312.5 ns) Clocks LOW, 5 cycles (312.5 ns) Clocks HIGH
 #define SHIFT_BIT(lo, hi) __asm__ __volatile__( \
@@ -34,81 +36,88 @@
   : "memory" \
 )
 
-// Latch pulse: 18 us LOW enclosed inside a 25 us ROW_RESET window
-static inline void latchWithZeroToken() {
-  // 1. Blank display & set 164 A,B = '0' (ROW_RESET HIGH)
-  PORTD = PORTD_IDLE | MASK_ROW_RESET;
+// Normal Row Latch: 18 us LATCH pulse inside a 25 us blanking window
+static inline void latchNormalRow() {
+  PORTD = PORTD_IDLE | MASK_ROW_RESET;                  // Blank & 164 A,B = '0'
   _delay_us(3.5);
-
-  // 2. Pulse LATCH LOW for 18 us (drives Q16/C5/Q15 watchdog & clocks 595/164)
-  PORTD = (PORTD_IDLE | MASK_ROW_RESET) & ~MASK_LATCH;
+  PORTD = (PORTD_IDLE | MASK_ROW_RESET) & ~MASK_LATCH;  // LATCH LOW (18 us)
   _delay_us(18.0);
-
-  // 3. Return LATCH HIGH, hold ROW_RESET HIGH for 3.5 us (Total blank = 25 us)
-  PORTD = PORTD_IDLE | MASK_ROW_RESET;
+  PORTD = PORTD_IDLE | MASK_ROW_RESET;                  // LATCH HIGH
   _delay_us(3.5);
-
-  // 4. Unblank display (ROW_RESET LOW)
-  PORTD = PORTD_IDLE;
+  PORTD = PORTD_IDLE;                                   // Unblank (ROW_RESET LOW)
 }
 
-static inline void latchWithOneToken() {
-  // 1. Keep ROW_RESET LOW (feeds '1' token to 164 A,B)
-  PORTD = PORTD_IDLE;
-  _delay_us(3.5);
+// Frame Reset Sequence (row == 7): Matches 0x027F-0x02A5 in eprom.bin
+// Performs the normal '0' shift, injects the '1' token, and shifts it past unused QA
+// using crisp 2.5 us pulses so the display never flashes on QA or starves C5.
+static inline void latchFrameResetRow() {
+  // 1. Blank & shift '0' (also pre-charges C5 with 14 us LOW pulse)
+  PORTD = PORTD_IDLE | MASK_ROW_RESET;                  // Blank & 164 A,B = '0'
+  _delay_us(2.5);
+  PORTD = (PORTD_IDLE | MASK_ROW_RESET) & ~MASK_LATCH;  // Pulse #1 LOW
+  _delay_us(14.0);
+  PORTD = PORTD_IDLE | MASK_ROW_RESET;                  // Pulse #1 HIGH
+  _delay_us(2.5);
 
-  // 2. Pulse LATCH LOW for 18 us while ROW_RESET is LOW
-  PORTD = PORTD_IDLE & ~MASK_LATCH;
-  _delay_us(18.0);
+  // 2. Inject '1' token into QA (ROW_RESET LOW briefly for 2.5 us clock edge)
+  PORTD = PORTD_IDLE;                                   // 164 A,B = '1'
+  _delay_us(1.5);
+  PORTD = PORTD_IDLE & ~MASK_LATCH;                     // Pulse #2 LOW
+  _delay_us(2.5);
+  PORTD = PORTD_IDLE;                                   // Pulse #2 HIGH
+  _delay_us(1.5);
 
-  // 3. Return LATCH HIGH
+  // 3. Immediately Blank & shift '1' from QA into QB, loading '0' into QA
+  PORTD = PORTD_IDLE | MASK_ROW_RESET;                  // Blank & 164 A,B = '0'
+  _delay_us(1.5);
+  PORTD = (PORTD_IDLE | MASK_ROW_RESET) & ~MASK_LATCH;  // Pulse #3 LOW
+  _delay_us(2.5);
+  PORTD = PORTD_IDLE | MASK_ROW_RESET;                  // Pulse #3 HIGH
+  _delay_us(1.5);
+
+  // 4. Unblank display for the new row
   PORTD = PORTD_IDLE;
-  _delay_us(3.5);
 }
 
 void setup() {
-  // Disable Timer0 overflow interrupt so millis() never causes pulse jitter
+  cli();        // Disable all global interrupts (prevents Timer0 jitter completely)
   TIMSK0 = 0;
-
-  // Configure PD2..PD7 as outputs
   DDRD |= 0xFC;
   PORTD = PORTD_IDLE;
 }
 
 void loop() {
-  // Precompute PORTD register values for ON (Orange: Red+Grn LOW) and OFF (Red+Grn HIGH)
-  const uint8_t on_clk_lo  = MASK_LATCH;                                  // Data LOW (ON), Clocks LOW
-  const uint8_t on_clk_hi  = MASK_LATCH | MASK_BOTH_CLKS;                 // Data LOW (ON), Clocks HIGH
-  const uint8_t off_clk_lo = MASK_LATCH | MASK_BOTH_DATS;                 // Data HIGH (OFF), Clocks LOW
-  const uint8_t off_clk_hi = MASK_LATCH | MASK_BOTH_DATS | MASK_BOTH_CLKS;// Data HIGH (OFF), Clocks HIGH
+  const uint8_t on_clk_lo  = MASK_LATCH;
+  const uint8_t on_clk_hi  = MASK_LATCH | MASK_BOTH_CLKS;
+  const uint8_t off_clk_lo = MASK_LATCH | MASK_BOTH_DATS;
+  const uint8_t off_clk_hi = MASK_LATCH | MASK_BOTH_DATS | MASK_BOTH_CLKS;
 
-  // 14-row multiplexing scan (1,504 us per row = 665 Hz row rate / 47.5 Hz frame rate)
-  for (int8_t row = 13; row >= 0; row--) {
+  // Lock inside while(1) so Arduino main() never interrupts the scan loop
+  while (1) {
+    for (int8_t row = 13; row >= 0; row--) {
 
-    // 1. Burst-shift 480 pixels in ~300 us (60 groups of 8 pixels: 3 ON, 5 OFF)
-    // 3/8 ON pixels during the 300 us burst gives the exact ~4.62V DC average on Pin 3 & Pin 5
-    for (uint8_t grp = 0; grp < 60; grp++) {
-      SHIFT_BIT(on_clk_lo,  on_clk_hi);
-      SHIFT_BIT(on_clk_lo,  on_clk_hi);
-      SHIFT_BIT(on_clk_lo,  on_clk_hi);
-      SHIFT_BIT(off_clk_lo, off_clk_hi);
-      SHIFT_BIT(off_clk_lo, off_clk_hi);
-      SHIFT_BIT(off_clk_lo, off_clk_hi);
-      SHIFT_BIT(off_clk_lo, off_clk_hi);
-      SHIFT_BIT(off_clk_lo, off_clk_hi);
-    }
+      // 1. Burst-shift 480 pixels in ~300 us (3 ON, 5 OFF)
+      for (uint8_t grp = 0; grp < 60; grp++) {
+        SHIFT_BIT(on_clk_lo,  on_clk_hi);
+        SHIFT_BIT(on_clk_lo,  on_clk_hi);
+        SHIFT_BIT(on_clk_lo,  on_clk_hi);
+        SHIFT_BIT(off_clk_lo, off_clk_hi);
+        SHIFT_BIT(off_clk_lo, off_clk_hi);
+        SHIFT_BIT(off_clk_lo, off_clk_hi);
+        SHIFT_BIT(off_clk_lo, off_clk_hi);
+        SHIFT_BIT(off_clk_lo, off_clk_hi);
+      }
 
-    // 2. Return Clocks LOW and Data HIGH for the 1,179 us display hold window
-    PORTD = PORTD_IDLE;
-    _delay_us(1179.0);
+      // 2. Display hold window
+      PORTD = PORTD_IDLE;
+      _delay_us(ROW_HOLD_US);
 
-    // 3. Normal Row Latch & Advance (25 us blanking, 18 us latch)
-    latchWithZeroToken();
-
-    // 4. Frame Reset Double-Pulse on wrap-around row (matches 0x0289 in eprom.bin)
-    if (row == 7) {
-      latchWithOneToken();  // Pulse #1: Inject '1' token into first 164 QA
-      latchWithZeroToken(); // Pulse #2: Shift '1' into QB, load '0' into QA
+      // 3. Latch & advance row
+      if (row == 7) {
+        latchFrameResetRow();
+      } else {
+        latchNormalRow();
+      }
     }
   }
 }
