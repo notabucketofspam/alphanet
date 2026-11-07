@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.6887863">
+  <PropertyGroup>
+    <ShouldRunNpmAudit>false</ShouldRunNpmAudit>
+    <ShouldRunBuildScript>true</ShouldRunBuildScript>
+    <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
+    <BuildCommand>build</BuildCommand>
+    <CleanCommand>clean</CleanCommand>
+  </PropertyGroup>
+</Project>
