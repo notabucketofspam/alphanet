@@ -24,11 +24,10 @@ static alpha_frame_t rx_buffer;
 
 /*
 NOTE:
-you gotta have this set up in your kconfig
+you gotta have this set up in your kconfig:
 CONFIG_LWIP_IP4_REASSEMBLY=y
 CONFIG_LWIP_IP6_REASSEMBLY=y
 */
-// gotta change the setting in menuconfig to increase the max number of wifi static rx buffers
 
 static void udp_server_task(void* pvParameters) {
   char rx_temp[sizeof(alpha_frame_t) + 32]; // Slight overhead buffer
