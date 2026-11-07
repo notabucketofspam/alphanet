@@ -13,19 +13,19 @@
 // For each row (14 total), there are 60 bytes of RED data, followed by 60 bytes of GREEN data.
 // A bit value of '1' means the LED is ON.
 typedef struct {
-    uint8_t red[ALPHA_ROWS][ALPHA_BYTES_PER_ROW];
-    uint8_t grn[ALPHA_ROWS][ALPHA_BYTES_PER_ROW];
+  uint8_t red[ALPHA_ROWS][ALPHA_BYTES_PER_ROW];
+  uint8_t grn[ALPHA_ROWS][ALPHA_BYTES_PER_ROW];
 } alpha_frame_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// Starts the Core 1 multiplexing task
-void alpha_sign_init(void);
+  // Starts the Core 1 multiplexing task
+  void alpha_sign_init(void);
 
-// Updates the display buffer safely from another task
-void alpha_sign_update_frame(const alpha_frame_t* new_frame);
+  // Updates the display buffer safely from another task
+  void alpha_sign_update_frame(const alpha_frame_t* new_frame);
 
 #ifdef __cplusplus
 }
