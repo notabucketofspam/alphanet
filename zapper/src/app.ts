@@ -1,7 +1,8 @@
 import dgram from "node:dgram";
 import { Buffer } from "node:buffer";
 
-import { bitmapRowToOffset } from "./alpha-row.js";
+import { init_ffmpeg } from "./ffmpegger.js";
+import { writeImageBitmapToBuffer } from "./buffer-mom.js";
 
 /*
  * THE FRAME FORMAT:
@@ -24,30 +25,59 @@ import { bitmapRowToOffset } from "./alpha-row.js";
 const tx_buf = Buffer.alloc(1680);
 const socket = dgram.createSocket("udp4");
 
-async function thing_do() {
-  for (let i = 0; i < 1680; i++) {
-    // tx_buf.writeUInt8(0x02, i);
-  }
-
-  console.log("Starting UDP transmission...");
-  let bitOffset = 7;
-	let byteOffset = 0;
-  setInterval(function () {
-    // some kinda offset functions (not slop, i promise)
-    bitOffset--;
-    if (bitOffset < 0) {
-      bitOffset = 7;
-			tx_buf[byteOffset] = 0;
-			byteOffset++;
-    }
-    if (byteOffset >= tx_buf.length) {
-			byteOffset = 0;
-    }
-    tx_buf[byteOffset] = (1 << bitOffset);
-    socket.send(tx_buf, 5005, "espressif.local", (err) => {
-      if (err) console.error("Send error:", err);
-    });
-  }, 200);
+function send_udp() {
+	socket.send(tx_buf, 5005, "espressif.local", (err) => {
+		if (err) console.error("Send error:", err);
+	});
 }
 
-thing_do();
+const bitmap = {
+	red: Array<Buffer>(84),
+	green: Array<Buffer>(84)
+};
+
+const rgbRowlen = 143 * 3;
+
+function processFrame(fbuf: Buffer) {
+	let rowIndex = 0;
+	let columnIndex = 0;
+	for (let i = 0; i < fbuf.length; ++i) {
+		if (i % 3 === 0) {
+			// red
+			bitmap.red[rowIndex][columnIndex] = Number(Boolean(fbuf[i]));
+		} else if (i % 3 === 1) {
+			// green
+			bitmap.green[rowIndex][columnIndex] = Number(Boolean(fbuf[i]));
+		} else if (i % 3 === 2) {
+			// blue. but we don't have blue.
+			++columnIndex
+		}
+		if ((i % rgbRowlen) === (rgbRowlen - 1)) {
+			// cr
+			columnIndex = 0;
+			// lf
+			++rowIndex;
+		}
+	}
+}
+
+function main_real() {
+	bitmap.red.fill(Buffer.alloc(143));
+	bitmap.green.fill(Buffer.alloc(143));
+
+	socket.on('error', err => {
+		if (err) console.error(err);
+	})
+	socket.bind();
+
+	const { splitter, ffmpeg } = init_ffmpeg();
+	splitter.on('frame', (frameBuffer: Buffer) => {
+		// This buffer has the 4-color frame. So... do something.
+		processFrame(frameBuffer);
+		writeImageBitmapToBuffer(tx_buf, bitmap.red, false);
+		writeImageBitmapToBuffer(tx_buf, bitmap.green, true);
+		send_udp();
+	});
+}
+main_real();
+
