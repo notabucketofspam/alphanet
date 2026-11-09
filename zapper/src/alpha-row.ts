@@ -1,12 +1,12 @@
-function alphaRowToOffset(row: number, isGreen:boolean): number {
+function alphaRowToOffset(row: number, isGreen: boolean): number {
   const baseAddr = ((row >> 2) * 120);
   const relAddr = ((row % 4) * 15);
-	const bankAddr = (Number(isGreen) * 60);
+  const bankAddr = (Number(isGreen) * 60);
   return baseAddr + relAddr + bankAddr;
 }
 
 /**Convert a row address in the bitmap to a buffer offset*/
-export function bitmapRowToOffset(row: number, isGreen:boolean): number {
+export function bitmapRowToOffset(row: number, isGreen: boolean): number {
   const alpha_row = alphaRow[row];
   return alphaRowToOffset(alpha_row, isGreen);
 }

@@ -34,7 +34,7 @@ type Shareholder = {
   ffmpeg: ChildProcessWithoutNullStreams;
 };
 
-export function init_ffmpeg():Shareholder {
+export function init_ffmpeg(): Shareholder {
   const splitter = new FrameSplitter();
   const ffmpeg = birth_of_ffmpeg();
 

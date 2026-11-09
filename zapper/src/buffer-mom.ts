@@ -4,11 +4,11 @@ import { bitmapRowToOffset } from "./alpha-row.js";
 import { maskImageBitmap } from "./screen-mask.js";
 
 
-function writeBitmapRowToBuffer(buffer:Buffer, offset: number, rowdat: Buffer) {
+function writeBitmapRowToBuffer(buffer: Buffer, offset: number, rowdat: Buffer) {
 	if (rowdat.length !== 120) {
 		throw new RangeError("row length needs to be 120");
 	}
-	buffer.fill(0, offset, (offset+15));
+	buffer.fill(0, offset, (offset + 15));
 	let byteIndex = offset;
 	for (let col = 0; col < rowdat.length; ++col) {
 		const theBit = 0x80 >> (col % 0x08);
