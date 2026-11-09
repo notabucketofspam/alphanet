@@ -3,6 +3,7 @@ import { Buffer } from "node:buffer";
 
 import { init_ffmpeg } from "./ffmpegger.js";
 import { writeImageBitmapToBuffer } from "./buffer-mom.js";
+import { bitmapRowToOffset } from "./alpha-row.js";
 
 /*
  * THE FRAME FORMAT:
@@ -61,15 +62,7 @@ function processFrame(fbuf: Buffer) {
 	}
 }
 
-function main_real() {
-	bitmap.red.fill(Buffer.alloc(143));
-	bitmap.green.fill(Buffer.alloc(143));
-
-	socket.on('error', err => {
-		if (err) console.error(err);
-	})
-	socket.bind();
-
+function something_important() {
 	const { splitter, ffmpeg } = init_ffmpeg();
 	splitter.on('frame', (frameBuffer: Buffer) => {
 		// This buffer has the 4-color frame. So... do something.
@@ -79,5 +72,76 @@ function main_real() {
 		send_udp();
 	});
 }
+
+function main_real() {
+	bitmap.red.fill(Buffer.alloc(143));
+	bitmap.green.fill(Buffer.alloc(143));
+	socket.on('error', err => {
+		if (err) console.error(err);
+	})
+	socket.bind();
+
+	// tx_buf.writeUInt8(0x80);
+	// send_udp();
+	// thing_do();
+	thing_do_II();
+	// test3();
+}
 main_real();
 
+const rowlen = 143;
+const rowcount = 84;
+
+function test3() {
+	let i = 0;
+	setInterval(function () {
+		const offset = bitmapRowToOffset(i, true);
+		tx_buf.writeUInt8(0x80, offset+3);
+		send_udp();
+		i++;
+	}, 10);
+}
+
+function thing_do_II() {
+	let rowIndex = 0;
+	let columnIndex = 0;
+	setInterval(function () {
+		bitmap.green[rowIndex].fill(0);
+		bitmap.green[rowIndex][columnIndex] = 1;
+		++columnIndex;
+		if (columnIndex >= rowlen) {
+			// cr
+			columnIndex = 0;
+			// lf
+			++rowIndex;
+		}
+		if (rowIndex >= rowcount) {
+			rowIndex = 0;
+		}
+		writeImageBitmapToBuffer(tx_buf, bitmap.green, true);
+		send_udp();
+	}, 10);
+}
+
+async function thing_do() {
+	let col = 0;
+	let byteIndex = 0;
+	setInterval(function () {
+		// some kinda offset functions (not slop, i promise)
+
+		tx_buf.fill(0);
+		const theBit = 0x80 >> (col % 0x08);
+		tx_buf.writeUInt8(theBit, byteIndex);
+
+		send_udp();
+
+		col++;
+		if (theBit & 1) {
+			++byteIndex;
+		}
+		if (byteIndex >= tx_buf.length) {
+			byteIndex = 0;
+			col = 0;
+		}
+	}, 10);
+}

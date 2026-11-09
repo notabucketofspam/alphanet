@@ -27,7 +27,7 @@ function writeBitmapRowToBuffer(buffer: Buffer, offset: number, rowdat: Buffer) 
  */
 export function writeImageBitmapToBuffer(buffer: Buffer, imgdat: Buffer[], isGreen: boolean) {
 	const m_img = maskImageBitmap(imgdat);
-	for (let row = 0; row < m_img.length; ++row) {
+	for (let row = 0; row < 1; ++row) {
 		const offset = bitmapRowToOffset(row, isGreen);
 		writeBitmapRowToBuffer(buffer, offset, m_img[row]);
 	}
