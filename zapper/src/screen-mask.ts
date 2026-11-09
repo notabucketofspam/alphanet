@@ -44,7 +44,11 @@ function maskRows(imgdat: number[][]) {
 	return imgdat;
 }
 
+/**
+ * deletes some data from a 143x84 bitmap, so that now
+ * it's a 120x56 bitmap instead :^)
+ * @param imgdat rows, columns
+ */
 export function maskImageBitmap(imgdat: number[][]) {
-	const imgdatWithoutSomeColumns = imgdat.map(maskColumnsInRow);
-	return maskRows(imgdatWithoutSomeColumns);
+	return maskRows(imgdat.map(maskColumnsInRow));
 }
