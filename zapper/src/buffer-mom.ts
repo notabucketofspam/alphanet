@@ -21,7 +21,7 @@ function writeBitmapRowToBuffer(buffer: Buffer, offset: number, rowdat: Buffer) 
 /**
  * writes image data to a buffer
  * @param buffer the 1680-byte data buffer
- * @param imgdat the 144x84 image bitmap (arranged as R1C1)
+ * @param imgdat the 144x84 image bitmap
  * @param isGreen tell you which color this is
  */
 export function writeImageBitmapToBuffer(buffer: Buffer, imgdat: Buffer[], isGreen: boolean) {
