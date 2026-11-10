@@ -91,32 +91,3 @@ function birth_of_ffmpeg(): ChildProcessWithoutNullStreams {
 	}
 	return ffmpeg;
 }
-
-/*
-Some important notes regarding the OBS setup:
-ADVANCED:
-- color format: nv12
-- color space: sRGB
-- color range: full
-VIDEO:
-- base canvas resolution: 144x84
-- output scaled resolution: 144x84
-- integer fps values: 88
-OUTPUT:
-- output mode: Advanced (yes, really)
-- RECORDING tab:
-	- type: custom output (ffmpeg)
-	- ffmpeg output type: output to url
-	- file path or URL: tcp://127.0.0.1:39633
-	- container format: rawvideo (video)
-And then you're gonna want to make a new scene.
-Also, make a new source.
-	- I'm using media source for now, but i think you can do, like, window capture, too.
-Right-click on the source:
-- transform
-	- stretch to screen (ctrl+s)
-- filters
-	- effects filters
-		- sharpen
-			- crank that slider all the way to the right.
-*/
