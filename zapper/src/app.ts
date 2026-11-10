@@ -32,12 +32,16 @@ function send_udp() {
 	});
 }
 
+const VID_WIDTH = 143;
+const VID_HEIGHT = 84;
+
+
 const bitmap = {
-	red: Array<Buffer>(84),
-	green: Array<Buffer>(84)
+	red: Array<Buffer>(VID_HEIGHT),
+	green: Array<Buffer>(VID_HEIGHT)
 };
 
-const rgbRowlen = 143 * 3;
+const rgbRowlen = VID_WIDTH * 3;
 
 function processFrame(fbuf: Buffer) {
 	let rowIndex = 0;
@@ -67,15 +71,17 @@ function something_important() {
 	splitter.on('frame', (frameBuffer: Buffer) => {
 		// This buffer has the 4-color frame. So... do something.
 		processFrame(frameBuffer);
-		writeImageBitmapToBuffer(tx_buf, bitmap.red, false);
+		// writeImageBitmapToBuffer(tx_buf, bitmap.red, false);
 		writeImageBitmapToBuffer(tx_buf, bitmap.green, true);
-		send_udp();
+		// send_udp();
 	});
 }
 
 function main_real() {
-	bitmap.red.fill(Buffer.alloc(143));
-	bitmap.green.fill(Buffer.alloc(143));
+	for (let i = 0; i < VID_HEIGHT; ++i) {
+		bitmap.red[i] = Buffer.alloc(VID_WIDTH);
+		bitmap.green[i] = Buffer.alloc(VID_WIDTH);
+	}
 	socket.on('error', err => {
 		if (err) console.error(err);
 	})
@@ -84,13 +90,11 @@ function main_real() {
 	// tx_buf.writeUInt8(0x80);
 	// send_udp();
 	// thing_do();
-	thing_do_II();
+	// thing_do_II();
 	// test3();
+	something_important();
 }
 main_real();
-
-const rowlen = 143;
-const rowcount = 84;
 
 function test3() {
 	let i = 0;
@@ -106,16 +110,18 @@ function thing_do_II() {
 	let rowIndex = 0;
 	let columnIndex = 0;
 	setInterval(function () {
-		bitmap.green[rowIndex].fill(0);
+		for (const buf of bitmap.green) {
+			buf.fill(0);
+		}
 		bitmap.green[rowIndex][columnIndex] = 1;
 		++columnIndex;
-		if (columnIndex >= rowlen) {
+		if (columnIndex >= VID_WIDTH) {
 			// cr
 			columnIndex = 0;
 			// lf
 			++rowIndex;
 		}
-		if (rowIndex >= rowcount) {
+		if (rowIndex >= VID_HEIGHT) {
 			rowIndex = 0;
 		}
 		writeImageBitmapToBuffer(tx_buf, bitmap.green, true);
