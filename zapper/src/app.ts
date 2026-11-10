@@ -65,15 +65,16 @@ function processFrame(fbuf: Buffer) {
 		}
 	}
 }
-
+import fs from "node:fs";
 function something_important() {
 	const { splitter, ffmpeg } = init_ffmpeg();
 	splitter.on('frame', (frameBuffer: Buffer) => {
+		fs.writeFileSync("frames/" + Date.now().toString(), frameBuffer, {encoding:null});
 		// This buffer has the 4-color frame. So... do something.
 		processFrame(frameBuffer);
 		// writeImageBitmapToBuffer(tx_buf, bitmap.red, false);
 		writeImageBitmapToBuffer(tx_buf, bitmap.green, true);
-		// send_udp();
+		send_udp();
 	});
 }
 
@@ -87,6 +88,8 @@ function main_real() {
 	})
 	socket.bind();
 
+	fs.rmSync("frames", { force: true, recursive: true });
+	fs.mkdirSync("frames", { recursive: true });
 	// tx_buf.writeUInt8(0x80);
 	// send_udp();
 	// thing_do();
