@@ -33,7 +33,7 @@ function maskColumnsInRow(rowdat: Buffer) {
 /**
  * takes an 84-row virtual image data buffer and deletes some
  * of the rows so that it's a 56-row real image data buffer
- * @param imgdat it's rows, columns
+ * @param imgdat each buffer is a row
  */
 function maskRows(imgdat: Buffer[]) {
 	if (imgdat.length !== VID_HEIGHT) {
@@ -56,3 +56,8 @@ function maskRows(imgdat: Buffer[]) {
 export function maskImageBitmap(imgdat: Buffer[]) {
 	return maskRows(imgdat.map(maskColumnsInRow));
 }
+/*
+NOTE: Technically, the virtual screen size should be 143px wide.
+But ffmpeg treatened to shoot me the last time I tried to feed him
+an odd number of pixels, so I backed down.
+*/
