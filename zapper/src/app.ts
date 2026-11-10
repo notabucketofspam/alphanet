@@ -4,6 +4,11 @@ import { Buffer } from "node:buffer";
 import { init_ffmpeg } from "./ffmpegger.js";
 import { writeImageBitmapToBuffer } from "./buffer-mom.js";
 import { bitmapRowToOffset } from "./alpha-row.js";
+import {
+	VID_WIDTH,
+	VID_HEIGHT,
+	RGB_ROW_LEN,
+} from "./the-casino.js";
 
 /*
  * THE FRAME FORMAT:
@@ -17,12 +22,11 @@ import { bitmapRowToOffset } from "./alpha-row.js";
  * - or 15 bytes wide and 7 bytes tall
  * Because of the daisy-chaining, we write to the same "row" on every board at once,
  * and then we switch to the next row.
- * Also, there's two colors. so we write 60 bytes for the red
- * and then 60 bytes for the green.
- * 
+ * Also, there's two colors. So, for the final data packet, 
+ * we write 840 bytes for the green and then 840 bytes for the red.
  */
 
-/** 14 rows * 120 bytes per row (60 Red + 60 Green) = 1680 bytes*/
+/** 14 rows * 60 bytes per row * 2 colors = 1680 bytes*/
 const tx_buf = Buffer.alloc(1680);
 const socket = dgram.createSocket("udp4");
 
@@ -31,12 +35,6 @@ function send_udp() {
 		if (err) console.error("Send error:", err);
 	});
 }
-
-import {
-	VID_WIDTH,
-	VID_HEIGHT,
-	RGB_ROW_LEN,
-} from "./the-casino.js";
 
 const bitmap = {
 	red: Array<Buffer>(VID_HEIGHT),
@@ -65,14 +63,13 @@ function processFrame(fbuf: Buffer) {
 		}
 	}
 }
-import fs from "node:fs";
+
 function something_important() {
 	const { splitter, ffmpeg } = init_ffmpeg();
 	splitter.on('frame', (frameBuffer: Buffer) => {
-		//fs.writeFileSync("frames/" + Date.now().toString(), frameBuffer, {encoding:null});
 		// This buffer has the 4-color frame. So... do something.
 		processFrame(frameBuffer);
-		// writeImageBitmapToBuffer(tx_buf, bitmap.red, false);
+		writeImageBitmapToBuffer(tx_buf, bitmap.red, false);
 		writeImageBitmapToBuffer(tx_buf, bitmap.green, true);
 		send_udp();
 	});
@@ -87,23 +84,17 @@ function main_real() {
 		if (err) console.error(err);
 	})
 	socket.bind();
-
-	// fs.rmSync("frames", { force: true, recursive: true });
-	// fs.mkdirSync("frames", { recursive: true });
-	// tx_buf.writeUInt8(0x80);
-	// send_udp();
-	// thing_do();
-	// thing_do_II();
-	// test3();
 	something_important();
 }
 main_real();
+
+// this section has a whole bunch of debug functions
 
 function test3() {
 	let i = 0;
 	setInterval(function () {
 		const offset = bitmapRowToOffset(i, true);
-		tx_buf.writeUInt8(0x80, offset+3);
+		tx_buf.writeUInt8(0x80, offset + 3);
 		send_udp();
 		i++;
 	}, 10);
