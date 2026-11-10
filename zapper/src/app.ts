@@ -32,16 +32,16 @@ function send_udp() {
 	});
 }
 
-const VID_WIDTH = 143;
-const VID_HEIGHT = 84;
-
+import {
+	VID_WIDTH,
+	VID_HEIGHT,
+	RGB_ROW_LEN,
+} from "./the-casino.js";
 
 const bitmap = {
 	red: Array<Buffer>(VID_HEIGHT),
 	green: Array<Buffer>(VID_HEIGHT)
 };
-
-const rgbRowlen = VID_WIDTH * 3;
 
 function processFrame(fbuf: Buffer) {
 	let rowIndex = 0;
@@ -57,7 +57,7 @@ function processFrame(fbuf: Buffer) {
 			// blue. but we don't have blue.
 			++columnIndex
 		}
-		if ((i % rgbRowlen) === (rgbRowlen - 1)) {
+		if ((i % RGB_ROW_LEN) === (RGB_ROW_LEN - 1)) {
 			// cr
 			columnIndex = 0;
 			// lf
@@ -69,7 +69,7 @@ import fs from "node:fs";
 function something_important() {
 	const { splitter, ffmpeg } = init_ffmpeg();
 	splitter.on('frame', (frameBuffer: Buffer) => {
-		fs.writeFileSync("frames/" + Date.now().toString(), frameBuffer, {encoding:null});
+		//fs.writeFileSync("frames/" + Date.now().toString(), frameBuffer, {encoding:null});
 		// This buffer has the 4-color frame. So... do something.
 		processFrame(frameBuffer);
 		// writeImageBitmapToBuffer(tx_buf, bitmap.red, false);
@@ -88,8 +88,8 @@ function main_real() {
 	})
 	socket.bind();
 
-	fs.rmSync("frames", { force: true, recursive: true });
-	fs.mkdirSync("frames", { recursive: true });
+	// fs.rmSync("frames", { force: true, recursive: true });
+	// fs.mkdirSync("frames", { recursive: true });
 	// tx_buf.writeUInt8(0x80);
 	// send_udp();
 	// thing_do();

@@ -3,7 +3,6 @@ import { Buffer } from "node:buffer";
 import { bitmapRowToOffset } from "./alpha-row.js";
 import { maskImageBitmap } from "./screen-mask.js";
 
-
 function writeBitmapRowToBuffer(buffer: Buffer, offset: number, rowdat: Buffer) {
 	if (rowdat.length !== 120) {
 		throw new RangeError("row length needs to be 120");
@@ -22,7 +21,7 @@ function writeBitmapRowToBuffer(buffer: Buffer, offset: number, rowdat: Buffer) 
 /**
  * writes image data to a buffer
  * @param buffer the 1680-byte data buffer
- * @param imgdat the 143x84 image bitmap (arranged as R1C1)
+ * @param imgdat the 144x84 image bitmap (arranged as R1C1)
  * @param isGreen tell you which color this is
  */
 export function writeImageBitmapToBuffer(buffer: Buffer, imgdat: Buffer[], isGreen: boolean) {

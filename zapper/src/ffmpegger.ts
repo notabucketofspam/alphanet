@@ -1,9 +1,11 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'child_process';
 import { Transform, TransformCallback } from 'stream';
 
-const WIDTH: number = 143;
-const HEIGHT: number = 84;
-const FRAME_SIZE: number = WIDTH * HEIGHT * 3;
+import {
+	VID_WIDTH,
+	VID_HEIGHT,
+	FRAME_SIZE,
+} from "./the-casino.js";
 
 /**thanks gemini*/
 class FrameSplitter extends Transform {
@@ -68,8 +70,8 @@ function birth_of_ffmpeg(): ChildProcessWithoutNullStreams {
 	const ffmpeg = spawn('ffmpeg', [
 		// 1. you get somevideo
 		'-f', 'rawvideo',
-		'-pixel_format', 'brga',
-		'-video_size', `${WIDTH}x${HEIGHT}`,
+		'-pixel_format', 'nv12',
+		'-video_size', `${VID_WIDTH}x${VID_HEIGHT}`,
 		'-framerate', '88',
 		'-i', 'tcp://127.0.0.1:39633?listen',
 
@@ -97,8 +99,8 @@ ADVANCED:
 - color space: sRGB
 - color range: full
 VIDEO:
-- base canvas resolution: 143x84
-- output scaled resolution: 143x84
+- base canvas resolution: 144x84
+- output scaled resolution: 144x84
 - integer fps values: 88
 OUTPUT:
 - output mode: Advanced (yes, really)
