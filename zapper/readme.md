@@ -15,7 +15,7 @@ How to run this piece of junk:
 	1. I'm serious
 1. Smile
 
-## IMPORTANT NOTE
+### IMPORTANT NOTE
 
 Don't leave the Director idling on a static screen of heavily-lit pixels.
 
@@ -23,7 +23,7 @@ Those pixels get hella steamy. The plastic cover on the sign will probably begin
 
 ---
 
-## OBS setup
+### OBS setup
 
 You can import the profile in [the `obs_profile` folder](./obs_profile/), or, if that doesn't work, you can set it up manually.
 
@@ -64,7 +64,7 @@ In the **Settings** menu somewhere on the screen:
 
 ---
 
-## FFmpeg
+### FFmpeg
 
 the `ffmpeg` command that I used to generate the palette (needed a bit of manual editing afterwards):
 ```
