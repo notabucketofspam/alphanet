@@ -23,7 +23,17 @@ Those pixels get hella steamy. The plastic cover on the sign will probably begin
 
 ---
 
-Some important notes regarding **the OBS setup**:
+## OBS setup
+
+You can import the profile in [the `obs_profile` folder](./obs_profile/), or, if that doesn't work, you can set it up manually.
+
+In the **Profile** menu at the top:
+
+- **New...**
+	- call it "Zapper"
+	- uncheck the "Show auto-configuration wizard" box
+
+In the **Settings** menu somewhere on the screen:
 
 - ADVANCED:
 	- color format: **nv12**
@@ -53,6 +63,8 @@ Some important notes regarding **the OBS setup**:
 					- crank that slider all the way to the right.
 
 ---
+
+## FFmpeg
 
 the `ffmpeg` command that I used to generate the palette (needed a bit of manual editing afterwards):
 ```
